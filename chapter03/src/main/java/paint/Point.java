@@ -1,6 +1,6 @@
 package paint;
 
-public class Point {
+public class Point implements Drawable {
 	private int x;
 	private int y;
 
@@ -35,10 +35,15 @@ public class Point {
 
 	public void show(boolean visible) {
 		if (visible) {
-			show(); //있는 코드를 재사용
+			show(); // 있는 코드를 재사용
 		} else {
 			System.out.println("Point[x=" + x + ", y=" + y + "]를 지웠습니다.");
 		}
+	}
+
+	@Override
+	public void draw() {
+		show();
 	}
 
 }
