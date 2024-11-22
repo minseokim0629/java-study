@@ -1,4 +1,6 @@
-package paint;
+package com.posco.paint.text;
+
+import com.posco.paint.i.Drawable;
 
 public class GraphicText implements Drawable {
 	private String text;

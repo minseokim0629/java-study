@@ -1,4 +1,6 @@
-package paint;
+package com.posco.paint.point;
+
+import com.posco.paint.i.Drawable;
 
 public class Point implements Drawable {
 	private int x;
