@@ -52,15 +52,16 @@ public class RequestHandler extends Thread {
 
 			consoleLog(request);
 			String[] tokens = request.split(" ");
-			for (String s : tokens) {
-				System.out.print("tokens:" + s);
-			}
-			System.out.println();
+//			for (String s : tokens) {
+//				System.out.print("tokens:" + s);
+//			}
+			//System.out.println();
 			if ("GET".equals(tokens[0])) {
 				responseStaticResources(outputStream, tokens[1], tokens[2]);
 			} else {
 				// methods : POST, DELETE, PUT, HEAD, CONNECT, ...
 				// SimpleHttpServer에서는 무시(400 Bad Request)
+				responseStaticResources(outputStream, "./error/400.html", tokens[2]);
 			}
 			// 예제 응답입니다.
 			// 서버 시작과 테스트를 마친 후, 주석 처리 합니다.
@@ -88,14 +89,24 @@ public class RequestHandler extends Thread {
 		if ("/".equals(url)) {
 			url = "/index.html";
 		}
-
+		//System.out.println(url);
 		File file = new File("./webapp" + url);
 		if (!file.exists()) {
-			// 404 response
+			//404 response
+			file = new File("./webapp/error/404.html");
+			accessPage(os, file);		
 			return;
 		}
 
 		// nio (new io)
+		accessPage(os, file);
+	}
+
+	public void consoleLog(String message) {
+		System.out.println("[RequestHandler#" + getId() + "] " + message);
+	}
+	
+	public static void accessPage(OutputStream os, File file) throws IOException{
 		byte[] body = Files.readAllBytes(file.toPath());
 		String contentType = Files.probeContentType(file.toPath());
 
@@ -103,10 +114,5 @@ public class RequestHandler extends Thread {
 		os.write(("Content-Type:" + contentType + "; charset=utf-8\n").getBytes("UTF-8"));
 		os.write("\n".getBytes());
 		os.write(body);
-		os.write("<h1>이 페이지가 잘 보이면 실습과제 SimpleHttpServer를 시작할 준비가 된 것입니다.</h1>".getBytes("UTF-8"));
-	}
-
-	public void consoleLog(String message) {
-		System.out.println("[RequestHandler#" + getId() + "] " + message);
 	}
 }
