@@ -7,23 +7,26 @@ import java.util.Scanner;
 public class NSLookup {
 
 	public static void main(String[] args) {
-		try {
-			while (true) {
-				Scanner scanner = new Scanner(System.in);
+		Scanner scanner = new Scanner(System.in);
+
+		while (true) {
+			try {
 				System.out.print("> ");
-				String s = scanner.nextLine();
-				if ("exit".equals(s)) {
+				String line = scanner.nextLine();
+				if ("exit".equals(line)) {
 					break;
 				}
-				InetAddress[] InetAddresses = InetAddress.getAllByName(s);
+				InetAddress[] InetAddresses = InetAddress.getAllByName(line);
 
 				for (InetAddress inetAddress : InetAddresses) {
-					System.out.println(s + " : " + inetAddress.getHostAddress());
+					System.out.println(line + " : " + inetAddress.getHostAddress());
 				}
+			} catch (UnknownHostException e) {
+				System.out.println("unknown host");
 			}
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
 		}
+
+		scanner.close();
 	}
 
 }
