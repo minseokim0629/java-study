@@ -24,26 +24,41 @@ public class TCPServer {
 			// blocking
 			// client가 connect 해줘야 block 해제되고 다음 코드가 실행됨
 			Socket socket = serverSocket.accept(); // blocking
+			try {
+				// 반대편의 IPAddress + 포트
+				InetSocketAddress inetRemoteSocketAddress = (InetSocketAddress) socket.getRemoteSocketAddress();
+				String remoteHostAddress = inetRemoteSocketAddress.getAddress().getHostAddress();
+				int remotePort = inetRemoteSocketAddress.getPort();
 
-			// block 여부 확인
-			System.out.println("연결 성공");
+				// block 여부 확인
+				System.out.println("[server] connected by client[" + remoteHostAddress + ":" + remotePort + "]");
 
-			// 4. IO Stream 받아오기
-			InputStream is = socket.getInputStream();
+				// 4. IO Stream 받아오기
+				InputStream is = socket.getInputStream();
 
-			// 5. 데이터 읽기
-			byte[] buffer = new byte[256];
-			// 패킷이 와서 read되면 깨움
-			int readByteCount = is.read(buffer); // blocking
-			if (readByteCount == -1) {
-				// closed by client
-				System.out.println("[server] closed by client");
-				return;
+				// 5. 데이터 읽기
+				byte[] buffer = new byte[256];
+				// 패킷이 와서 read되면 깨움
+				int readByteCount = is.read(buffer); // blocking
+				if (readByteCount == -1) {
+					// closed by client
+					System.out.println("[server] closed by client");
+					return;
+				}
+
+				String data = new String(buffer, 0, readByteCount, "utf-8");
+				System.out.println("[server] receive: " + data);
+			} catch (IOException e) {
+				System.out.println("error:" + e);
+			} finally {
+				try {
+					if (socket != null && !socket.isClosed()) {
+						socket.close();
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
-
-			String data = new String(buffer, 0, readByteCount, "utf-8");
-			System.out.println("[server] receive: " + data);
-
 		} catch (IOException e) {
 			System.out.println("[server] error: " + e);
 		} finally {
