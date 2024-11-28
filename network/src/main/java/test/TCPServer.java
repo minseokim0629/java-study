@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class TCPServer {
 
@@ -56,8 +57,10 @@ public class TCPServer {
 					os.write(data.getBytes("utf-8"));
 				}
 
+			} catch (SocketException e) { // SocketException이 IOException의 자식이라 먼저 적어줘야 함. 정상 종료 아닌 경우 대비하여 예외처리 필요
+				System.out.println("[server] Socket Exception " + e);
 			} catch (IOException e) {
-				System.out.println("error:" + e);
+				System.out.println("[server] error:" + e);
 			} finally {
 				try {
 					if (socket != null && !socket.isClosed()) {

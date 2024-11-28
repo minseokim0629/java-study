@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class TCPClient {
 
@@ -38,6 +39,8 @@ public class TCPClient {
 
 			data = new String(buffer, 0, readByteCount, "utf-8");
 			System.out.println("[client] received:" + data);
+		} catch (SocketException e) { // SocketException이 IOException의 자식이라 먼저 적어줘야 함. 정상 종료 아닌 경우 대비하여 예외처리 필요
+			System.out.println("[client] Socket Exception " + e);
 		} catch (IOException e) {
 			System.out.println("[client] error:" + e);
 		} finally {
