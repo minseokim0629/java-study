@@ -16,7 +16,7 @@ public class ChatServer {
 		List<PrintWriter> listWriters = null;
 
 		try {
-			serverSocket = new ServerSocket();
+			serverSocket = new ServerSocket(); 
 			listWriters = new ArrayList<PrintWriter>();
 			serverSocket.bind(new InetSocketAddress("0.0.0.0", PORT));
 			consoleLog("starts...[port:" + PORT + "]");
