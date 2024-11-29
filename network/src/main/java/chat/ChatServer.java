@@ -9,14 +9,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ChatServer {
-	public static final int PORT = 9999;
+	public static final int PORT = 9321;
 
 	public static void main(String[] args) {
 		ServerSocket serverSocket = null;
-		List<PrintWriter> listWriters = new ArrayList<PrintWriter>();
+		List<PrintWriter> listWriters = null;
 
 		try {
 			serverSocket = new ServerSocket();
+			listWriters = new ArrayList<PrintWriter>();
 			serverSocket.bind(new InetSocketAddress("0.0.0.0", PORT));
 			consoleLog("starts...[port:" + PORT + "]");
 			

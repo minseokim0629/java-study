@@ -38,7 +38,7 @@ public class ChatServerThread extends Thread {
 			while (true) {
 				String request = br.readLine();
 				if (request == null) {
-					ChatServer.consoleLog("closed by client");
+					ChatServer.consoleLog("closed by client[" + remoteHostAddress + ":" + remotePort + "]");
 					doQuit(pw);
 					break;
 				}
