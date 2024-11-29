@@ -29,10 +29,7 @@ public class ChatServerThread extends Thread {
 
 			ChatServer.consoleLog("connected by client[" + remoteHostAddress + ":" + remotePort + "]");
 
-			// TCPServer와 달리 읽고 쓸때 byte로 변경하는 작업 불필요
-			// flush - true (default : false)
 			PrintWriter pw = new PrintWriter(new OutputStreamWriter((socket.getOutputStream()), "utf-8"), true);
-			// 읽는 쪽은 읽으면 버퍼가 자동으로 비워지니까 autoflush 기능이 없음
 			BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 			while (true) {
