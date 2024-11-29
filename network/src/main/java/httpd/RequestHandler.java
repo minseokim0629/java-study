@@ -11,6 +11,8 @@ import java.nio.file.Files;
 
 public class RequestHandler extends Thread {
 	private Socket socket;
+	// apache 스타일
+	private final String DOCUMENT_ROOT = "./webapp";
 
 	public RequestHandler(Socket socket) {
 		this.socket = socket;
@@ -55,13 +57,14 @@ public class RequestHandler extends Thread {
 //			for (String s : tokens) {
 //				System.out.print("tokens:" + s);
 //			}
-			//System.out.println();
+			// System.out.println();
 			if ("GET".equals(tokens[0])) {
 				responseStaticResources(outputStream, tokens[1], tokens[2]);
 			} else {
 				// methods : POST, DELETE, PUT, HEAD, CONNECT, ...
 				// SimpleHttpServer에서는 무시(400 Bad Request)
-				responseStaticResources(outputStream, "./error/400.html", tokens[2]);
+				response400Error(outputStream, tokens[2]);
+				responseStaticResources(outputStream, DOCUMENT_ROOT + "/error/400.html", tokens[2]);
 			}
 			// 예제 응답입니다.
 			// 서버 시작과 테스트를 마친 후, 주석 처리 합니다.
@@ -89,28 +92,47 @@ public class RequestHandler extends Thread {
 		if ("/".equals(url)) {
 			url = "/index.html";
 		}
-		//System.out.println(url);
-		File file = new File("./webapp" + url);
+		// System.out.println(url);
+		File file = new File(DOCUMENT_ROOT + url);
 		if (!file.exists()) {
-			//404 response
-			file = new File("./webapp/error/404.html");
-			accessPage(os, file);		
+			// 404 response
+			file = new File(DOCUMENT_ROOT + "/error/404.html");
+			response404Error(os, protocol);
+			accessPage(os, file, protocol);
 			return;
 		}
 
 		// nio (new io)
-		accessPage(os, file);
+		accessPage(os, file, protocol);
+	}
+
+	private void response400Error(OutputStream outputStream, String string) {
+		/*
+		 HTTP/1.1 400 Bad Request\n
+		 Content-Type : text/html; charset=utf-8
+		 \n
+		 
+		 */
+	}
+	
+	private void response404Error(OutputStream os, String protocol) {
+		/*
+		 HTTP/1.1 404 File Not Found\n
+		 Content-Type : text/html; charset=utf-8
+		 \n
+		 
+		 */
 	}
 
 	public void consoleLog(String message) {
 		System.out.println("[RequestHandler#" + getId() + "] " + message);
 	}
-	
-	public static void accessPage(OutputStream os, File file) throws IOException{
+
+	private void accessPage(OutputStream os, File file, String protocol) throws IOException {
 		byte[] body = Files.readAllBytes(file.toPath());
 		String contentType = Files.probeContentType(file.toPath());
 
-		os.write("HTTP/1.1 200 OK\n".getBytes("UTF-8"));
+		os.write((protocol + " 200 OK\n").getBytes("UTF-8"));
 		os.write(("Content-Type:" + contentType + "; charset=utf-8\n").getBytes("UTF-8"));
 		os.write("\n".getBytes());
 		os.write(body);
