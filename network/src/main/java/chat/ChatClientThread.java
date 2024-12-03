@@ -25,6 +25,10 @@ public class ChatClientThread extends Thread {
 					ChatClient.consoleLog("closed by server");
 					break;
 				}
+				else if("QUIT:OK".equals(data)) {
+					ChatClient.consoleLog("client 채팅 종료");
+					break;
+				}
 				System.out.println(data);
 			}
 		} catch (SocketException e) { 
