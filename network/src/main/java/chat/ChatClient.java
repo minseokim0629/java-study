@@ -27,26 +27,43 @@ public class ChatClient {
 
 			PrintWriter pw = new PrintWriter(new OutputStreamWriter((socket.getOutputStream()), "utf-8"), true);
 			BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			
+
 			System.out.print("닉네임>>");
 			String nickname = scanner.nextLine();
-			pw.println("JOIN:"+nickname);
-			
-			new ChatClientThread(socket).start();
-			
+			pw.println("JOIN:" + nickname);
+
+			String response = br.readLine();
+
+			if ("JOIN:OK".equals(response)) {
+				System.out.println("입장하였습니다. 즐거운 채팅 되세요");
+			} else {
+				System.out.println("채팅창 로딩에 실패하였습니다. 다시 시도해주세요.");
+				System.exit(0);
+			}
+
+			ChatClientThread chatClientThread = new ChatClientThread(socket);
+			chatClientThread.start();
+
 			while (true) {
-				//System.out.print(">>");
+				// System.out.print(">>");
 				String line = scanner.nextLine();
-				if(line==null) {
-					
+				if (line == null) {
+
 				}
 				if ("quit".equals(line)) {
-					pw.println("QUIT:"+line);
+					pw.println("QUIT");
+
+					try {
+						// chatClientThread가 종료될때까지 기다린다 (block)
+						chatClientThread.join();
+					} catch (InterruptedException e) {
+						consoleLog("error:" + e);
+					}
+					
 					break;
-				}
-				else {
+				} else {
 					// message
-					pw.println("MSG:"+line);
+					pw.println("MSG:" + line);
 				}
 			}
 		} catch (IOException e) {
@@ -57,7 +74,7 @@ public class ChatClient {
 					socket.close();
 				}
 			} catch (IOException e) {
-				e.printStackTrace();
+				consoleLog("error:" + e);
 			}
 		}
 	}
