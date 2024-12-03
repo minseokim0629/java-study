@@ -21,7 +21,6 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.Scanner;
 
 import chat.ChatClient;
 import chat.ChatServer;
@@ -34,11 +33,7 @@ public class ChatWindow {
 	private TextField textField;
 	private TextArea textArea;
 
-	private Socket socket;
 	private static final String SERVER_IP = "127.0.0.1";
-	private Scanner scanner;
-	private PrintWriter pw;
-	private boolean data;
 
 	public ChatWindow(String name) {
 		frame = new Frame(name);
@@ -46,64 +41,20 @@ public class ChatWindow {
 		buttonSend = new Button("Send");
 		textField = new TextField();
 		textArea = new TextArea(30, 80);
-		data = false;
 	}
 
 	public void show() {
-		// Button
-		buttonSend.setBackground(Color.GRAY);
-		buttonSend.setForeground(Color.WHITE);
-		// anonymous class
-		buttonSend.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent actionEvent) {
-				sendMessage();
-			}
-		});
-		// 컴파일러에서 객체로 생성할 뿐, 자바에서는 함수를 파라미터로 넘길 수 없다.(객체만 넘길 수 있을 뿐)
-		// buttonSend.addActionListener( (ActionEvent actionEvent ) -> {});
-		// Textfield
-		textField.setColumns(80);
-		// adapter pattern은 요즘 deplicate 되는 추세다 awt?
-		textField.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				char keyChar = e.getKeyChar();
-				if (keyChar == KeyEvent.VK_ENTER) {
-					sendMessage();
-				}
-			}
-		});
-
-		// Pannel
-		pannel.setBackground(Color.LIGHT_GRAY);
-		pannel.add(textField);
-		pannel.add(buttonSend);
-		frame.add(BorderLayout.SOUTH, pannel);
-
-		// TextArea
-		textArea.setEditable(false);
-		frame.add(BorderLayout.CENTER, textArea);
-
-		// Frame
-		frame.addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
-				finish();
-			}
-		});
-		frame.setVisible(true);
-		frame.pack();
 
 		// 1. 서버 연결 작업
 		// 2. IO Stream set
 		// 3. JOIN Protocol
 		// 4. ChatClientThread 생성
 		try {
-			socket = new Socket();
+			Socket socket = new Socket();
 
 			socket.connect(new InetSocketAddress(SERVER_IP, ChatServer.PORT)); // IP, 포트번호
 
-			pw = new PrintWriter(new OutputStreamWriter((socket.getOutputStream()), "utf-8"), true);
+			PrintWriter pw = new PrintWriter(new OutputStreamWriter((socket.getOutputStream()), "utf-8"), true);
 			BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 			String nickname = frame.getTitle();
@@ -118,14 +69,59 @@ public class ChatWindow {
 				System.exit(0);
 			}
 
-			new ChatClientThread(socket).start();
+			ChatClientThread chatClientThread = new ChatClientThread(socket);
+			chatClientThread.start();
+
+			// Button
+			buttonSend.setBackground(Color.GRAY);
+			buttonSend.setForeground(Color.WHITE);
+			// anonymous class
+			buttonSend.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent actionEvent) {
+					sendMessage(pw);
+				}
+			});
+			// 컴파일러에서 객체로 생성할 뿐, 자바에서는 함수를 파라미터로 넘길 수 없다.(객체만 넘길 수 있을 뿐)
+			// buttonSend.addActionListener( (ActionEvent actionEvent ) -> {});
+			// Textfield
+			textField.setColumns(80);
+			// adapter pattern은 요즘 deplicate 되는 추세다 awt?
+			textField.addKeyListener(new KeyAdapter() {
+				@Override
+				public void keyPressed(KeyEvent e) {
+					char keyChar = e.getKeyChar();
+					if (keyChar == KeyEvent.VK_ENTER) {
+						sendMessage(pw);
+					}
+				}
+			});
+
+			// Pannel
+			pannel.setBackground(Color.LIGHT_GRAY);
+			pannel.add(textField);
+			pannel.add(buttonSend);
+			frame.add(BorderLayout.SOUTH, pannel);
+
+			// TextArea
+			textArea.setEditable(false);
+			frame.add(BorderLayout.CENTER, textArea);
+
+			// Frame
+			frame.addWindowListener(new WindowAdapter() {
+				public void windowClosing(WindowEvent e) {
+					finish(chatClientThread, pw);
+				}
+			});
+			frame.setVisible(true);
+			frame.pack();
 
 		} catch (IOException e) {
 			consoleLog("error:" + e);
 		}
 	}
 
-	private void sendMessage() {
+	private void sendMessage(PrintWriter pw) {
 		String message = textField.getText();
 		// System.out.println("메세지를 보내는 프로토콜 구현!:" + message);
 		if (message.trim().isEmpty()) {
@@ -143,9 +139,15 @@ public class ChatWindow {
 		textArea.append("\n");
 	}
 
-	private void finish() {
+	private void finish(ChatClientThread chatClientThread, PrintWriter pw) {
 		// quit protocol 구현
 		pw.println("QUIT");
+		try {
+			// chatClientThread가 종료될때까지 기다린다 (block)
+			chatClientThread.join();
+		} catch (InterruptedException e) {
+			consoleLog("error:" + e);
+		}
 		// exit java application
 		System.exit(0);
 	}
