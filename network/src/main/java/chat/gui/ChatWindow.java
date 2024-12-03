@@ -38,7 +38,6 @@ public class ChatWindow {
 	private static final String SERVER_IP = "127.0.0.1";
 	private Scanner scanner;
 	private PrintWriter pw;
-	private BufferedReader br;
 	private boolean data;
 
 	public ChatWindow(String name) {
@@ -71,7 +70,7 @@ public class ChatWindow {
 			public void keyPressed(KeyEvent e) {
 				char keyChar = e.getKeyChar();
 				if (keyChar == KeyEvent.VK_ENTER) {
-					data = true;
+					sendMessage();
 				}
 			}
 		});
@@ -105,53 +104,38 @@ public class ChatWindow {
 			socket.connect(new InetSocketAddress(SERVER_IP, ChatServer.PORT)); // IP, 포트번호
 
 			pw = new PrintWriter(new OutputStreamWriter((socket.getOutputStream()), "utf-8"), true);
-			br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 			String nickname = frame.getTitle();
 			pw.println("JOIN:" + nickname);
 
+			String response = br.readLine();
+
+			if ("JOIN:OK".equals(response)) {
+				updateTextArea("입장하였습니다. 즐거운 채팅 되세요");
+			} else {
+				System.out.println("채팅창 로딩에 실패하였습니다. 다시 시도해주세요.");
+				System.exit(0);
+			}
+
 			new ChatClientThread(socket).start();
 
-			while (true) {
-				String line = textField.getText();
-				if (data) {
-					if (line == null) {
-
-					}
-					if ("quit".equals(line)) {
-						pw.println("QUIT:" + line);
-						break;
-					} else {
-						// message
-						pw.println("MSG:" + line);
-					}
-					sendMessage();
-					data = false;
-				}
-			}
 		} catch (IOException e) {
 			consoleLog("error:" + e);
-		} finally {
-			try {
-				if (socket != null && !socket.isClosed()) {
-					socket.close();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 		}
 	}
 
 	private void sendMessage() {
 		String message = textField.getText();
-		System.out.println("메세지를 보내는 프로토콜 구현!:" + message);
-
+		// System.out.println("메세지를 보내는 프로토콜 구현!:" + message);
+		if (message.trim().isEmpty()) {
+			updateTextArea("메세지를 입력해주세요.");
+		} else {
+			// message
+			pw.println("MSG:" + message);
+		}
 		textField.setText("");
 		textField.requestFocus();
-
-		// ChatClientThread에서 서버로 부터 받은 메세지가 있다고 치고~
-		// 쓰레드에 있어야 하는 코드임
-		// updateTextArea("아무개: " + message);
 	}
 
 	private void updateTextArea(String message) {
@@ -161,8 +145,7 @@ public class ChatWindow {
 
 	private void finish() {
 		// quit protocol 구현
-
-		// quit ok가 오면 종료
+		pw.println("QUIT");
 		// exit java application
 		System.exit(0);
 	}
@@ -182,15 +165,17 @@ public class ChatWindow {
 		public void run() {
 			try {
 				BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
 				while (true) {
 					String data = br.readLine();
+
 					if (data == null) {
 						ChatClient.consoleLog("closed by server");
 						break;
+					} else if ("QUIT:OK".equals(data)) { // QUIT OK가 오면 종료
+						consoleLog("client 채팅 종료");
+						break;
 					}
 					updateTextArea(data);
-					// System.out.println(data);
 				}
 			} catch (SocketException e) {
 				ChatClient.consoleLog("Socket Exception " + e);
@@ -202,7 +187,7 @@ public class ChatWindow {
 						socket.close();
 					}
 				} catch (IOException e) {
-					e.printStackTrace();
+					ChatClient.consoleLog("error:" + e);
 				}
 			}
 
