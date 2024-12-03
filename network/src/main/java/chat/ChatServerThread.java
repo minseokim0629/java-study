@@ -79,7 +79,8 @@ public class ChatServerThread extends Thread {
 		// 브로드캐스팅 후 writerpool에 저장
 		broadcast(this.nickname + "님이 입장했습니다");
 		addWriter(pw);
-		pw.println("입장하였습니다. 즐거운 채팅 되세요");
+		// ack
+		pw.println("JOIN:OK");
 	}
 
 	private void doMessage(String message) {
@@ -89,6 +90,8 @@ public class ChatServerThread extends Thread {
 	private void doQuit(PrintWriter pw) {
 		removeWriter(pw);
 		broadcast(this.nickname + "님이 퇴장하였습니다.");
+		// ack
+		pw.println("QUIT:OK");
 	}
 
 	private void addWriter(PrintWriter pw) {
