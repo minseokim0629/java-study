@@ -27,13 +27,13 @@ import chat.ChatServer;
 
 public class ChatWindow {
 
+	private static final String SERVER_IP = "127.0.0.1";
 	private Frame frame;
 	private Panel pannel;
 	private Button buttonSend;
 	private TextField textField;
 	private TextArea textArea;
-
-	private static final String SERVER_IP = "127.0.0.1";
+	private Socket socket;
 
 	public ChatWindow(String name) {
 		frame = new Frame(name);
@@ -50,7 +50,7 @@ public class ChatWindow {
 		// 3. JOIN Protocol
 		// 4. ChatClientThread 생성
 		try {
-			Socket socket = new Socket();
+			socket = new Socket();
 
 			socket.connect(new InetSocketAddress(SERVER_IP, ChatServer.PORT)); // IP, 포트번호
 
@@ -69,7 +69,7 @@ public class ChatWindow {
 				System.exit(0);
 			}
 
-			ChatClientThread chatClientThread = new ChatClientThread(socket);
+			ChatClientThread chatClientThread = new ChatClientThread(br);
 			chatClientThread.start();
 
 			// Button
@@ -149,7 +149,15 @@ public class ChatWindow {
 			consoleLog("error:" + e);
 		}
 		// exit java application
-		System.exit(0);
+		try {
+			if (socket != null && !socket.isClosed()) {
+				socket.close();
+			}
+		} catch (IOException e) {
+			ChatClient.consoleLog("error:" + e);
+		} finally {
+			System.exit(0);
+		}
 	}
 
 	private void consoleLog(String message) {
@@ -157,16 +165,15 @@ public class ChatWindow {
 	}
 
 	private class ChatClientThread extends Thread {
-		private Socket socket;
+		private BufferedReader br;
 
-		public ChatClientThread(Socket socket) {
-			this.socket = socket;
+		public ChatClientThread(BufferedReader br) {
+			this.br = br;
 		}
 
 		@Override
 		public void run() {
 			try {
-				BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 				while (true) {
 					String data = br.readLine();
 
@@ -184,15 +191,8 @@ public class ChatWindow {
 			} catch (IOException e) {
 				ChatClient.consoleLog("error:" + e);
 			} finally {
-				try {
-					if (socket != null && !socket.isClosed()) {
-						socket.close();
-					}
-				} catch (IOException e) {
-					ChatClient.consoleLog("error:" + e);
-				}
+				ChatClient.consoleLog("closed by server");
 			}
-
 		}
 	}
 }
