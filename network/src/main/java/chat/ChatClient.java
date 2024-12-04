@@ -41,14 +41,15 @@ public class ChatClient {
 				System.exit(0);
 			}
 
-			ChatClientThread chatClientThread = new ChatClientThread(socket);
+			ChatClientThread chatClientThread = new ChatClientThread(br);
 			chatClientThread.start();
 
 			while (true) {
 				// System.out.print(">>");
 				String line = scanner.nextLine();
 				if (line == null) {
-
+					consoleLog("closed by server");
+					break;
 				}
 				if ("quit".equals(line)) {
 					pw.println("QUIT");
@@ -70,6 +71,9 @@ public class ChatClient {
 			consoleLog("error:" + e);
 		} finally {
 			try {
+				if (scanner != null) {
+					scanner.close();
+				}
 				if (socket != null && !socket.isClosed()) {
 					socket.close();
 				}

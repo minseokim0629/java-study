@@ -8,17 +8,15 @@ import java.net.SocketException;
 
 public class ChatClientThread extends Thread {
 
-	private Socket socket;
+	private BufferedReader br;
 
-	public ChatClientThread(Socket socket) {
-		this.socket = socket;
+	public ChatClientThread(BufferedReader br) {
+		this.br = br;
 	}
 
 	@Override
 	public void run() {
 		try {
-			BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			
 			while (true) {
 				String data = br.readLine();
 				if (data == null) {
@@ -35,14 +33,6 @@ public class ChatClientThread extends Thread {
 			ChatClient.consoleLog("Socket Exception " + e);
 		} catch (IOException e) {
 			ChatClient.consoleLog("error:" + e);
-		} finally {
-			try {
-				if (socket != null && !socket.isClosed()) {
-					socket.close();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+		} 
 	}
 }
